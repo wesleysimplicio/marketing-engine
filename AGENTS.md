@@ -1,5 +1,14 @@
 # Marketing Engine — Agent Charter
 
+## Simplicio Ecosystem Contract (canonical)
+
+This repository is a Simplicio ecosystem product. For every non-trivial task: run `simplicio runtime map --repo . --for-llm markdown`, then `simplicio memory "<task>"`, rank/load relevant skills, execute through the native `simplicio` CLI, validate, and record evidence. MCP is fallback transport only.
+
+### Integration boundaries
+Use `simplicio-mapper` for bounded repository context, `simplicio-fast` for snapshots/PlanDAG, `simplicio-dev-cli` for deterministic implementation, `simplicio-runtime` for gates/contracts/receipts, `simplicio-loop` for convergence and close-gates, and `simplicio-agent` as control plane. Providers remain replaceable workers.
+
+Mutations use `simplicio edit --plan` or governed dev-cli; preserve `simplicio.io/v1`; validate with `simplicio contracts smoke --json` and real tests; report `MEASURED|` only from receipts, otherwise `UNVERIFIED|`. Never fabricate provider, test, savings or evidence output.
+
 ## Tool model
 
 Marketing Engine is a CLI tool installed into a host project (`npx marketing-engine init`). It writes to `.marketing-engine/` inside the host repo (clients, env, outputs, data, specs) and never assumes a specific business domain. All client-specific knowledge lives under `.marketing-engine/clients/<slug>/`. The engine itself is generic and public.
