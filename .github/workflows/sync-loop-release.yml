@@ -1,0 +1,58 @@
+name: Sync Simplicio Loop release
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [simplicio_loop_release_published]
+  schedule:
+    - cron: "17 * * * *"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: loop-release-sync
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Resolve latest signed source tag
+        id: release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          tag="$(gh api repos/wesleysimplicio/simplicio-loop/releases/latest --jq .tag_name)"
+          commit="$(git ls-remote https://github.com/wesleysimplicio/simplicio-loop.git "refs/tags/$tag" | awk 'NR==1 {print $1}')"
+          test -n "$tag"
+          test "${#commit}" -eq 40
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "commit=$commit" >> "$GITHUB_OUTPUT"
+      - name: Generate deterministic consumer lock
+        run: python3 scripts/sync_loop_release.py "${{ steps.release.outputs.tag }}" "${{ steps.release.outputs.commit }}"
+      - name: Open one bump PR when the lock changes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- .simplicio/release-train/loop-lock.json; then
+            echo "Loop release lock already current"
+            exit 0
+          fi
+          branch="bot/loop-release-$TAG"
+          git switch -c "$branch"
+          git config user.name "simplicio-release-train[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .simplicio/release-train/loop-lock.json
+          git commit -m "chore(release): sync Simplicio Loop $TAG"
+          git push --force-with-lease origin "$branch"
+          gh pr create --base main --head "$branch" \
+            --title "chore(release): sync Simplicio Loop $TAG" \
+            --body "Automated release-train bump. The lock records the Loop tag and full source commit resolved from GitHub. Validation must pass before merge."
