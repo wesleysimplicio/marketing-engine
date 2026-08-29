@@ -73,10 +73,26 @@ review = "2026-10-01"
 
 [[paths]]
 pattern = "lib/gate/evidence.ts"
-category = "internal_fixture_or_evidence"
+category = "source_format_boundary"
 owner = "wesleysimplicio"
-target_format = "HBI manifest plus typed evidence artifacts"
-reason = "Evidence gate consumes the HBI manifest without a JSON fallback"
+target_format = "Typed evidence artifacts at external file boundary"
+reason = "Evidence gate reads external compliance, QA and browser outputs while the manifest source is HBI"
+review = "2026-10-01"
+
+[[paths]]
+pattern = ".simplicio/ledger/savings-events.jsonl"
+category = "third_party_protocol_boundary"
+owner = "wesleysimplicio"
+target_format = "Simplicio CLI-owned savings-event/v1 JSONL"
+reason = "The upstream simplicio-cli runtime owns this compatibility ledger; marketing never appends to it"
+review = "2026-10-01"
+
+[[paths]]
+pattern = ".simplicio/update/first-party-adapters.json"
+category = "toolchain_mandated"
+owner = "wesleysimplicio"
+target_format = "Simplicio runtime update metadata"
+reason = "Upstream runtime metadata is not marketing application state"
 review = "2026-10-01"
 
 [[paths]]
