@@ -21,9 +21,9 @@ test("cost accounting selects model rates, safe overrides, and honest usage fall
   assert.equal(estimateCost({ provider: "deepseek", model: "chat", tokens_in: 1000, tokens_out: 1000 }), 0.50028);
   assert.equal(estimateTokens(""), 0);
   assert.equal(estimateTokens("12345"), 2);
-  assert.deepEqual(resolveUsageWithFallback({ provider: "x", prompt: "a", output: "b", tokens_in: 3, tokens_out: 4 }), { tokens_in: 3, tokens_out: 4, used_estimate: false });
+  assert.deepEqual(resolveUsageWithFallback({ provider: "x", prompt: "a", output: "b", tokens_in: 3, tokens_out: 4 }), { tokens_in: 3, tokens_out: 4, used_estimate: false, source: "provider" });
   assert.deepEqual(resolveUsageWithFallback({ provider: "missing", model: "m", prompt: "12345", output: "123456789" }), {
-    tokens_in: 2, tokens_out: 3, used_estimate: true, fallback_reason: "usage_missing:missing:m",
+    tokens_in: 2, tokens_out: 3, used_estimate: true, source: "tokenizer", encoding: "o200k_base", fallback_reason: "usage_missing:missing:m:model_encoding_unknown",
   });
 });
 
