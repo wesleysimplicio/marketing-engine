@@ -24,6 +24,27 @@ test("registry rejects globs, omissions, duplicates, invalid and expired reviews
   assert.ok(errors.some((x) => x.includes("expired")));
 });
 
+test("allows an explicit directory boundary while exact migration paths win", () => {
+  const directory = { ...valid("data/**"), scope: "directory" };
+  assert.deepEqual(validateRegistry([directory]), []);
+  const root = mkdtempSync(join(tmpdir(), "format-policy-scoped-"));
+  mkdirSync(join(root, "config"));
+  mkdirSync(join(root, "data"));
+  writeFileSync(join(root, "config", "json-boundaries.toml"), [
+    "version = 2",
+    "[[paths]]", 'pattern = "data/**"', 'scope = "directory"', 'category = "test_fixture"', 'owner = "quality"',
+    'reason = "bounded public fixture directory"', 'review = "2099-01-01"', 'target_format = "JSON fixture"',
+    "[[paths]]", 'pattern = "data/internal.json"', 'category = "internal_persistence"', 'owner = "quality"',
+    'reason = "legacy migration input"', 'review = "2099-01-01"', 'target_format = "HBP"',
+  ].join("\n"));
+  writeFileSync(join(root, "data", "public.json"), "{}");
+  writeFileSync(join(root, "data", "internal.json"), "{}");
+  const report = scanInternalFormats({ root, strict: true });
+  assert.deepEqual(report.unknown, []);
+  assert.deepEqual(report.bounded.map((x) => x.path), ["data/public.json"]);
+  assert.deepEqual(report.migration.map((x) => x.path), ["data/internal.json"]);
+});
+
 test("recognizes serializers without flagging ordinary JSON words", () => {
   assert.equal(sourceUsesJson("const value = JSON.parse(raw)"), true);
   assert.equal(sourceUsesJson("const format = 'json'"), false);

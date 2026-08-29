@@ -22,6 +22,7 @@ review = "2026-10-01"
 
 [[paths]]
 pattern = "contracts/**"
+scope = "directory"
 category = "historical_documentation"
 owner = "wesleysimplicio"
 target_format = "Versioned binary contract with external compatibility fixture"
@@ -30,6 +31,7 @@ review = "2026-10-01"
 
 [[paths]]
 pattern = "data/**"
+scope = "directory"
 category = "internal_persistence"
 owner = "wesleysimplicio"
 target_format = "HBP for append-only runs/evidence; HBI for indexes"
@@ -38,6 +40,7 @@ review = "2026-10-01"
 
 [[paths]]
 pattern = ".marketing-engine/**"
+scope = "directory"
 category = "internal_persistence"
 owner = "wesleysimplicio"
 target_format = "HBP for receipts; HBI for indexed artifacts"
@@ -78,6 +81,7 @@ review = "2026-10-01"
 
 [[paths]]
 pattern = "lib/providers/**"
+scope = "directory"
 category = "third_party_protocol_boundary"
 owner = "wesleysimplicio"
 target_format = "Typed provider adapter"
@@ -86,6 +90,7 @@ review = "2026-10-01"
 
 [[paths]]
 pattern = "e2e/**"
+scope = "directory"
 category = "third_party_protocol_boundary"
 owner = "wesleysimplicio"
 target_format = "Typed test fixture/adapter"
@@ -110,8 +115,168 @@ review = "2026-10-01"
 
 [[paths]]
 pattern = ".claude/**"
+scope = "directory"
 category = "toolchain_mandated"
 owner = "wesleysimplicio"
 target_format = "Tool configuration"
 reason = "Host tooling metadata; not application state"
+review = "2026-10-01"
+
+[[paths]]
+pattern = ".codex/**"
+scope = "directory"
+category = "toolchain_mandated"
+owner = "wesleysimplicio"
+target_format = "Tool configuration"
+reason = "Host tooling metadata; not application state"
+review = "2026-10-01"
+
+[[paths]]
+pattern = ".ralph/**"
+scope = "directory"
+category = "toolchain_mandated"
+owner = "wesleysimplicio"
+target_format = "Shell orchestration with typed boundary payloads"
+reason = "Loop operator scripts are control-plane tooling, not application state"
+review = "2026-10-01"
+
+[[paths]]
+pattern = ".simplicio/**"
+scope = "directory"
+category = "internal_cache"
+owner = "wesleysimplicio"
+target_format = "HBP/HBI runtime envelopes"
+reason = "Simplicio runtime metadata and ledgers are internal projections"
+review = "2026-10-01"
+
+[[paths]]
+pattern = ".specs/**"
+scope = "directory"
+category = "historical_documentation"
+owner = "wesleysimplicio"
+target_format = "Versioned specification fixture"
+reason = "Specifications and compatibility fixtures are not runtime state"
+review = "2026-10-01"
+
+[[paths]]
+pattern = "bin/**"
+scope = "directory"
+category = "source_format_boundary"
+owner = "wesleysimplicio"
+target_format = "Typed CLI boundary"
+reason = "CLI JSON is an external display/configuration boundary"
+review = "2026-10-01"
+
+[[paths]]
+pattern = "docs/**"
+scope = "directory"
+category = "historical_documentation"
+owner = "wesleysimplicio"
+target_format = "Documentation/evidence fixture"
+reason = "Documentation artifacts do not act as runtime state"
+review = "2026-10-01"
+
+[[paths]]
+pattern = "extension/**"
+scope = "directory"
+category = "source_format_boundary"
+owner = "wesleysimplicio"
+target_format = "Versioned extension contract"
+reason = "Extension manifests and schemas are public contract inputs"
+review = "2026-10-01"
+
+[[paths]]
+pattern = "extensions/**"
+scope = "directory"
+category = "source_format_boundary"
+owner = "wesleysimplicio"
+target_format = "Versioned extension contract"
+reason = "Extension manifests and lock files are public contract inputs"
+review = "2026-10-01"
+
+[[paths]]
+pattern = "hooks/**"
+scope = "directory"
+category = "toolchain_mandated"
+owner = "wesleysimplicio"
+target_format = "Hook protocol payload"
+reason = "Hook payloads are dictated by the host automation protocol"
+review = "2026-10-01"
+
+[[paths]]
+pattern = "lib/**"
+scope = "directory"
+category = "source_format_boundary"
+owner = "wesleysimplicio"
+target_format = "Typed in-memory structures at external protocol edges"
+reason = "JSON use is bounded to adapter, CLI, fixture, or protocol edges; internal state has exact migration entries"
+review = "2026-10-01"
+
+[[paths]]
+pattern = "outputs/**"
+scope = "directory"
+category = "internal_cache"
+owner = "wesleysimplicio"
+target_format = "Ephemeral dry-run output"
+reason = "Generated outputs are disposable cache-like artifacts, never the source of truth"
+review = "2026-10-01"
+
+[[paths]]
+pattern = "scripts/**"
+scope = "directory"
+category = "toolchain_mandated"
+owner = "wesleysimplicio"
+target_format = "Build/test tooling boundary"
+reason = "Scripts consume JSON from external tools or emit reports"
+review = "2026-10-01"
+
+[[paths]]
+pattern = "tests/**"
+scope = "directory"
+category = "test_fixture"
+owner = "wesleysimplicio"
+target_format = "Test fixture or assertion payload"
+reason = "Tests model public contracts and external protocol fixtures"
+review = "2026-10-01"
+
+[[paths]]
+pattern = "tools/**"
+scope = "directory"
+category = "toolchain_mandated"
+owner = "wesleysimplicio"
+target_format = "Policy tooling boundary"
+reason = "Standalone policy tooling consumes and emits scanner payloads"
+review = "2026-10-01"
+
+[[paths]]
+pattern = "video/**"
+scope = "directory"
+category = "third_party_protocol_boundary"
+owner = "wesleysimplicio"
+target_format = "Remotion/toolchain configuration"
+reason = "Video rendering tooling owns its provider/configuration protocol"
+review = "2026-10-01"
+
+[[paths]]
+pattern = "package-lock.json"
+category = "toolchain_mandated"
+owner = "wesleysimplicio"
+target_format = "Package-manager metadata"
+reason = "Required by npm; never application state"
+review = "2026-10-01"
+
+[[paths]]
+pattern = "stryker.config.json"
+category = "toolchain_mandated"
+owner = "wesleysimplicio"
+target_format = "Mutation-testing configuration"
+reason = "Tool configuration is not runtime state"
+review = "2026-10-01"
+
+[[paths]]
+pattern = "tsconfig.json"
+category = "toolchain_mandated"
+owner = "wesleysimplicio"
+target_format = "TypeScript configuration"
+reason = "Required by the TypeScript toolchain; never application state"
 review = "2026-10-01"
