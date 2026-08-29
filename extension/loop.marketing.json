@@ -4,7 +4,7 @@
   "name": "Loop Marketing",
   "version": "1.0.0",
   "domain": "marketing",
-  "requires_core": { "min_version": "1.0.0", "max_version": "1.99.99" },
+  "requires_core": { "min_version": "3.38.1", "max_version": "3.99.99" },
   "capabilities": {
     "requires": ["core.receipts", "core.findings", "core.completion", "core.outbox"],
     "provides": ["marketing.reporting", "marketing.finding-routing", "marketing.completion-audit"]
