@@ -143,7 +143,11 @@ export function validateManifest(value: unknown): string[] {
 
 function validateSimple(item: Record<string, unknown>, path: string, allowed: string[], required: string[]): string[] {
   const errors = unknownFields(item, allowed, path);
-  for (const field of required) if (!nonEmpty(item[field])) errors.push(`${path}.${field} is required`);
+  for (const field of required) {
+    if (field === "required_capabilities") {
+      if (!Array.isArray(item[field]) || !(item[field] as unknown[]).every(nonEmpty)) errors.push(`${path}.${field} must be an array of strings`);
+    } else if (!nonEmpty(item[field])) errors.push(`${path}.${field} is required`);
+  }
   if ("version" in item && !semver(item.version)) errors.push(`${path}.version must be semver`);
   if ("migrations" in item && !Array.isArray(item.migrations)) errors.push(`${path}.migrations must be an array`);
   if ("default" in item && typeof item.default !== "boolean") errors.push(`${path}.default must be boolean`);
@@ -218,4 +222,3 @@ export function loadMarketingManifest(path = MARKETING_MANIFEST_PATH): Extension
 export function extensionMetadata(manifest = loadMarketingManifest(), coreVersion?: string, graph = composeStageGraph(CORE_STAGE_GRAPH, [manifest])) {
   return { extension_id: manifest.extension_id, extension_version: manifest.version, manifest_schema: manifest.schema, manifest_hash: manifestHash(manifest), upstream_version: coreVersion ?? null, graph_hash: graph.graph_hash ?? null };
 }
-

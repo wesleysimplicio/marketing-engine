@@ -4,7 +4,7 @@
   "adapter_version": "1.0.0",
   "upstream_version": "3.38.1",
   "upstream_commit": "b5ddbd6af76392198906e61d0911a236eca3bcf8",
-  "manifest_sha256": "4812b9045eb915ed3248ba63a171f7c121dee34b49333ece3f8152ad67f9653e",
+  "manifest_sha256": "b7dea1282b6c6155753f3d5c15ed1ec75834b6ad703c5f8ab863dcc0ee68c3dc",
   "supported_schemas": [
     "simplicio.loop-extension/v1",
     "marketing-event/v1",
