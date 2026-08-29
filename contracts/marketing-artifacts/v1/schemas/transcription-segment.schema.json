@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "marketing-transcription/v1",
+  "title": "Marketing transcription segment",
+  "type": "object",
+  "required": ["segment_id", "start_seconds", "end_seconds", "text", "language", "confidence", "speaker", "origin"],
+  "properties": {
+    "segment_id": { "type": "string", "minLength": 1 },
+    "start_seconds": { "type": "number", "minimum": 0 },
+    "end_seconds": { "type": "number", "minimum": 0 },
+    "text": { "type": "string", "minLength": 1 },
+    "language": { "type": "string", "minLength": 1 },
+    "confidence": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+    "speaker": { "type": ["string", "null"] },
+    "origin": { "enum": ["provider", "supplied_transcript", "manual_review"] }
+  },
+  "additionalProperties": false
+}
