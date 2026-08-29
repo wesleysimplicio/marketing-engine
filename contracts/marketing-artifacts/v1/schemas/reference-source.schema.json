@@ -1,0 +1,20 @@
+{
+  "$id": "marketing-reference-source/v1",
+  "type": "object",
+  "required": ["schema", "source_id", "kind", "origin", "canonical_uri", "content_sha256", "language", "duration_seconds", "permissions", "collected_at", "status", "reason", "idempotency_key"],
+  "properties": {
+    "schema": { "const": "marketing-reference-source/v1" },
+    "source_id": { "type": "string" },
+    "kind": { "enum": ["youtube", "url", "file", "transcript"] },
+    "origin": { "enum": ["youtube", "url", "file", "supplied_transcript"] },
+    "canonical_uri": { "type": "string" },
+    "content_sha256": { "type": ["string", "null"] },
+    "language": { "type": ["string", "null"] },
+    "duration_seconds": { "type": ["number", "null"] },
+    "permissions": { "enum": ["unknown", "granted", "denied"] },
+    "collected_at": { "type": "string" },
+    "status": { "enum": ["ingested", "deferred", "rejected"] },
+    "reason": { "type": ["string", "null"] },
+    "idempotency_key": { "type": "string" }
+  }
+}

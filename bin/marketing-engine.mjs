@@ -31,6 +31,7 @@ Commands:
   report      report build <piece-id> [--require-evidence] (mechanical markdown)
   findings    findings list|report|reconcile|doctor (Loop receipt projections)
   campaign    Plan a piece queue from a CAMPAIGN.md brief, or review one
+  reference   Ingest a YouTube, HTTPS, file, or supplied-transcript reference
   anchor      Freeze/check/gate a campaign anchor with durable AC receipts
   new-piece   Create a new piece markdown from the template
   status      Show pipeline state (counts + recent runs + 24h cost)
@@ -641,12 +642,15 @@ function spawnTsx(scriptPath, extraArgs, hostRoot, options = {}) {
   env.MARKETING_ENGINE_HOST_ROOT = hostRoot;
   // Default to DRY_RUN=true unless explicitly set in .env or shell.
   if (env.DRY_RUN === undefined) env.DRY_RUN = "true";
-  const scriptUrl = pathToFileURL(scriptPath).href;
-  const evalCode = `import(${JSON.stringify(scriptUrl)}).then((m) => m.cliEntry(${JSON.stringify(extraArgs)}))`;
+  // Run Node with the package's ESM loader directly. The tsx CLI's eval mode
+  // opens a local IPC pipe, which is unavailable in restricted containers;
+  // direct loader mode preserves the same TypeScript execution without it.
+  const loader = resolve(join(PACKAGE_ROOT, "node_modules", "tsx", "dist", "esm", "index.mjs"));
+  const childArgs = ["--import", loader, scriptPath, ...extraArgs];
   // Long-running commands (the loop) stream in real time via stdio:
   // "inherit"; short commands keep the buffered replay (default) so their
   // output ordering is stable.
-  const result = spawnSync(process.execPath, [tsx, "--eval", evalCode], {
+  const result = spawnSync(process.execPath, childArgs, {
     cwd: hostRoot,
     env,
     ...(options.stdio === "inherit"
@@ -719,6 +723,12 @@ function commandLoop(args) {
 function commandCampaign(args) {
   const hostRoot = resolveHostRoot(args);
   const script = join(PACKAGE_ROOT, "lib", "cli", "campaign.ts");
+  spawnTsx(script, args._.slice(1), hostRoot);
+}
+
+function commandReference(args) {
+  const hostRoot = resolveHostRoot(args);
+  const script = join(PACKAGE_ROOT, "lib", "cli", "reference.ts");
   spawnTsx(script, args._.slice(1), hostRoot);
 }
 
@@ -842,6 +852,9 @@ function main() {
       return;
     case "campaign":
       commandCampaign(args);
+      return;
+    case "reference":
+      commandReference(args);
       return;
     case "anchor":
       commandAnchor(args);
