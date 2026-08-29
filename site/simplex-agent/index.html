@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Simplicio Agent — execução governada</title>
+<meta name="description" content="Simplicio Agent: um runtime de trabalho orientado por Loop, evidências, receipts e gates explícitos." />
+<style>
+  :root { color-scheme: dark light; --bg:#0b0d10; --panel:#12151a; --fg:#edf1f5; --muted:#9aa4b2; --accent:#f4c95d; --border:#252b34; --code:#10141a; }
+  @media (prefers-color-scheme: light) { :root { --bg:#f7f8fa; --panel:#fff; --fg:#16181d; --muted:#596474; --accent:#9a6500; --border:#e0e5eb; --code:#eef1f4; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; }
+  .wrap { max-width:900px; margin:auto; padding:48px 24px 88px; }
+  header { padding:28px 0 42px; border-bottom:1px solid var(--border); }
+  .kicker { color:var(--accent); font-size:.8rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; }
+  h1 { font-size:clamp(2rem,5vw,3.3rem); line-height:1.1; margin:14px 0; }
+  h2 { font-size:1.35rem; margin:0 0 14px; }
+  .lead { color:var(--muted); font-size:1.1rem; max-width:700px; }
+  section { padding:34px 0; border-bottom:1px solid var(--border); }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; }
+  .card { background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:18px; }
+  .card h3 { margin:0 0 6px; font-size:1rem; }
+  .card p { color:var(--muted); margin:0; font-size:.94rem; }
+  .loop { display:flex; flex-wrap:wrap; gap:8px; padding:0; list-style:none; }
+  .loop li { border:1px solid var(--border); border-radius:99px; padding:6px 11px; color:var(--muted); }
+  code, pre { background:var(--code); border-radius:6px; }
+  code { padding:2px 5px; }
+  pre { padding:15px; overflow:auto; border:1px solid var(--border); }
+  a { color:var(--accent); }
+  .note { color:var(--muted); font-size:.94rem; }
+  footer { color:var(--muted); font-size:.86rem; padding-top:24px; }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <div class="kicker">Simplicio Agent</div>
+    <h1>Trabalho que deixa um rastro verificável.</h1>
+    <p class="lead">Um agente para executar tarefas de engenharia e marketing dentro de um ciclo governado: entender o contexto, agir dentro de limites, verificar o resultado e registrar o que aconteceu.</p>
+  </header>
+
+  <section>
+    <h2>Como o ciclo funciona</h2>
+    <ul class="loop">
+      <li>discover</li><li>understand</li><li>decide</li><li>act</li><li>verify</li><li>correct</li><li>record</li><li>repeat</li>
+    </ul>
+    <p class="note">O agente não substitui o sistema de lifecycle: os stages, leases, budgets, fila e completion pertencem ao Loop core. O marketing package fornece overlays, adapters e gates compatíveis.</p>
+  </section>
+
+  <section>
+    <h2>O que existe neste repositório</h2>
+    <div class="grid">
+      <article class="card"><h3>Provider-agnostic</h3><p>LLM, imagem, vídeo, analytics e publicação são resolvidos por interfaces e matriz de providers, mantendo a lógica de negócio desacoplada.</p></article>
+      <article class="card"><h3>Evidência antes da afirmação</h3><p>Claims, QA, tracking e relatórios passam por gates. Dados não observados permanecem nulos e recebem um motivo.</p></article>
+      <article class="card"><h3>Dry-run por padrão</h3><p>O caminho seguro não envia, publica ou gasta sem credenciais, policy, tracking e autoridade explícitos.</p></article>
+      <article class="card"><h3>Receipts auditáveis</h3><p>Manifests HBI e streams HBP preservam decisões, status, custos, falhas, deduplicação e retomadas.</p></article>
+    </div>
+  </section>
+
+  <section>
+    <h2>Uma chamada local</h2>
+    <pre><code>npm install
+DRY_RUN=true node bin/marketing-engine.mjs doctor
+DRY_RUN=true node bin/marketing-engine.mjs low-ticket plan \
+  --campaign-id camp-001 \
+  --objective "validar uma oferta" \
+  --market "software B2B" \
+  --budget 100</code></pre>
+    <p class="note">O plano é produzido localmente, com gates explícitos. Uma saída de planejamento não é prova de demanda, receita, conversão ou lucro.</p>
+  </section>
+
+  <section>
+    <h2>Leia o código e os contratos</h2>
+    <div class="grid">
+      <article class="card"><h3><a href="../../AGENTS.md">Contrato do agente</a></h3><p>Orientações de execução e definição de pronto do projeto.</p></article>
+      <article class="card"><h3><a href="../../extensions/loop.marketing/manifest.json">Manifesto Loop Marketing</a></h3><p>Capacidades, overlays, roles, gates e efeitos declarados.</p></article>
+      <article class="card"><h3><a href="../../lib/extension/marketing-extension.ts">Extensão oficial</a></h3><p>Bindings de roles e integração com o lifecycle governado.</p></article>
+      <article class="card"><h3><a href="../../docs/evidence/issue-130-low-ticket-workflow.md">Low Ticket workflow</a></h3><p>Plano de referência, oferta, funnel, testes, diagnóstico e postmortem.</p></article>
+    </div>
+  </section>
+
+  <section>
+    <h2>Limites honestos</h2>
+    <p class="note">Esta é uma página estática do repositório. Ela não afirma autonomia geral, AGI, resultados de negócio, métricas de produção nem hospedagem ativa. Providers externos, credenciais, aprovação humana, publicação real e analytics de produção continuam dependências explícitas do ambiente operador.</p>
+  </section>
+
+  <footer><a href="../../README.md">Voltar ao projeto</a> · Simplicio Agent · página local em <code>/simplex-agent</code></footer>
+</main>
+</body>
+</html>

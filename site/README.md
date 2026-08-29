@@ -23,6 +23,8 @@ python -m http.server --directory site 8080
 - `asolaria-integration/index.html` — the "Simplicio + Asolaria — Agente
   Evolutivo no Metal" site section requested in issue #78 (P2), with the
   integration timeline and ecosystem map.
+- `simplex-agent/index.html` — the Simplicio Agent overview requested in
+  issue #133, with links to the real contracts and implementation.
 
 ## What is still external
 
