@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "marketing-low-ticket-plan/v1",
+  "title": "Low Ticket workflow plan",
+  "type": "object",
+  "required": ["schema", "plan_id", "campaign_id", "dry_run", "constraints", "stages", "gates", "metrics"],
+  "properties": {
+    "schema": { "const": "marketing-low-ticket-plan/v1" },
+    "plan_id": { "type": "string", "minLength": 1 },
+    "campaign_id": { "type": "string", "minLength": 1 },
+    "dry_run": { "const": true },
+    "constraints": { "type": "object" },
+    "stages": { "type": "array", "minItems": 20 },
+    "gates": { "type": "object" },
+    "metrics": { "type": "array" }
+  },
+  "additionalProperties": true
+}
