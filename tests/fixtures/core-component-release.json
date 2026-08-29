@@ -8,7 +8,7 @@
   "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   "breaking_change": false,
   "protocols": { "simplicio.loop-extension/v1": "1.0.0" },
-  "capabilities": ["extension_manifest_v1", "receipts_v1", "fencing_v1"],
+  "capabilities": ["extension_manifest_v1", "receipts_v1", "fencing_v1", "core.receipts", "core.findings", "core.completion", "core.outbox"],
   "published_at": "2026-07-22T00:00:00Z",
   "conformance": { "modes": ["embedded", "daemon", "remote"], "passed": true }
 }
