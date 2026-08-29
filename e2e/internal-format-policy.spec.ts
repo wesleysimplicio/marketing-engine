@@ -18,10 +18,9 @@ test("baseline has no registry errors or unclassified internal JSON", () => {
   expect(result.stdout).toContain("## Unclassified\n- none");
 });
 
-test("strict release gate remains fail-closed while issue #103 migration work exists", () => {
+test("strict release gate is clean after the internal-state migration", () => {
   const result = spawnSync(process.execPath, ["scripts/check-internal-formats.mjs", "--strict"], { cwd: cleanRoot, encoding: "utf8" });
-  expect(result.status).toBe(2);
-  expect(result.stdout).toContain("## Migration required");
-  expect(result.stdout).not.toContain("## Migration required\n- none");
+  expect(result.status).toBe(0);
+  expect(result.stdout).toContain("## Migration required\n- none");
   expect(result.stdout).toContain("## Unclassified\n- none");
 });

@@ -3,7 +3,7 @@
  *
  * Port of the simplicio-mapper savings pattern (`simplicio.savings-event/v1`):
  * every time the engine avoids LLM work (manifest reuse, cached artifact,
- * native delegation) it appends a hash-chained JSONL receipt.
+ * native delegation) it appends a hash-chained HBP receipt.
  *
  * Honesty discipline (anti-Goodhart, non-negotiable):
  *  - `proof.kind` is always `"estimated"` here — nothing in this module
@@ -15,18 +15,15 @@
  *
  * The simplicio-cli runtime owns `.simplicio/ledger/savings-events.jsonl`
  * with its own hash chain; this module NEVER appends there. The engine
- * writes its own chain to `.simplicio/ledger/marketing-savings-events.jsonl`
+ * writes its own chain to `.simplicio/ledger/marketing-savings-events.hbp`
  * so neither producer can corrupt the other's chain.
  */
 
-import {
-  appendFileSync,
-  existsSync,
-  mkdirSync,
-  readFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { createHash, randomBytes } from "node:crypto";
+import { appendHbp, readHbp } from "../formats/binary";
+import { migrateLegacy } from "../formats/migrate";
 
 export const SAVINGS_SCHEMA = "simplicio.savings-event/v1";
 export const ESTIMATOR = "heuristic:chars-div-4";
@@ -67,6 +64,10 @@ export interface AppendSavingsInput {
 }
 
 export function marketingLedgerPath(root: string): string {
+  return resolve(root, ".simplicio", "ledger", "marketing-savings-events.hbp");
+}
+
+export function legacyMarketingLedgerPath(root: string): string {
   return resolve(root, ".simplicio", "ledger", "marketing-savings-events.jsonl");
 }
 
@@ -89,22 +90,13 @@ function canonicalJson(value: unknown): string {
 
 function chainTail(path: string): string | null {
   if (!existsSync(path)) return null;
-  let text = "";
-  try {
-    text = readFileSync(path, "utf8");
-  } catch {
-    return null;
-  }
-  const lines = text.trim().split("\n").filter(Boolean);
-  for (let i = lines.length - 1; i >= 0; i--) {
-    try {
-      const rec = JSON.parse(lines[i]) as SavingsEvent;
-      if (typeof rec.event_hash === "string") return rec.event_hash;
-    } catch {
-      continue;
-    }
-  }
-  return null;
+  try { return readHbp<SavingsEvent>(path).at(-1)?.event_hash ?? null; } catch { return null; }
+}
+
+function migrateLegacyLedger(root: string): void {
+  const target = marketingLedgerPath(root);
+  const legacy = legacyMarketingLedgerPath(root);
+  if (!existsSync(target) && existsSync(legacy)) migrateLegacy(legacy, target, "HBP");
 }
 
 function runLogDisabled(): boolean {
@@ -125,6 +117,7 @@ export function appendSavingsEvent(
   const saved = Math.max(0, baseline - actual);
   const pct = baseline > 0 ? Math.round((saved / baseline) * 1000) / 10 : 0;
   try {
+    migrateLegacyLedger(root);
     const path = marketingLedgerPath(root);
     const dir = dirname(path);
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
@@ -154,7 +147,7 @@ export function appendSavingsEvent(
       .update(canonicalJson(body))
       .digest("hex");
     const event: SavingsEvent = { ...body, event_hash };
-    appendFileSync(path, `${JSON.stringify(event)}\n`, "utf8");
+    appendHbp(path, event);
     return event;
   } catch {
     return null;
@@ -172,15 +165,11 @@ export interface ChainVerification {
 export function verifyChain(root: string): ChainVerification {
   const path = marketingLedgerPath(root);
   if (!existsSync(path)) return { ok: true, count: 0 };
-  const lines = readFileSync(path, "utf8").trim().split("\n").filter(Boolean);
+  let rows: SavingsEvent[];
+  try { rows = readHbp<SavingsEvent>(path); } catch (error) { return { ok: false, count: 0, broken_at: 0, reason: error instanceof Error ? error.message : "unreadable HBP ledger" }; }
   let prev: string | null = null;
-  for (let i = 0; i < lines.length; i++) {
-    let rec: SavingsEvent;
-    try {
-      rec = JSON.parse(lines[i]) as SavingsEvent;
-    } catch {
-      return { ok: false, count: i, broken_at: i, reason: "unparseable line" };
-    }
+  for (let i = 0; i < rows.length; i++) {
+    const rec = rows[i]!;
     if (rec.prev_event_hash !== prev) {
       return { ok: false, count: i, broken_at: i, reason: "prev_event_hash mismatch" };
     }
@@ -193,7 +182,7 @@ export function verifyChain(root: string): ChainVerification {
     }
     prev = event_hash;
   }
-  return { ok: true, count: lines.length };
+  return { ok: true, count: rows.length };
 }
 
 export interface SavingsSummary {
@@ -216,11 +205,10 @@ export function savingsSummary(root: string): SavingsSummary {
     by_source: {},
     chain: verifyChain(root),
   };
+  try { migrateLegacyLedger(root); } catch { return summary; }
   if (!existsSync(path)) return summary;
-  for (const line of readFileSync(path, "utf8").split("\n")) {
-    if (!line.trim()) continue;
-    try {
-      const rec = JSON.parse(line) as SavingsEvent;
+  try {
+    for (const rec of readHbp<SavingsEvent>(path)) {
       if (rec.schema !== SAVINGS_SCHEMA) continue;
       summary.count++;
       summary.saved_total += rec.tokens.saved_total;
@@ -229,9 +217,7 @@ export function savingsSummary(root: string): SavingsSummary {
       bucket.count++;
       bucket.saved += rec.tokens.saved_total;
       summary.by_source[rec.source] = bucket;
-    } catch {
-      continue;
     }
-  }
+  } catch { return summary; }
   return summary;
 }
