@@ -22,20 +22,40 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Resolve latest signed source tag
+      - name: Resolve latest source tag and release artifact
         id: release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          tag="$(gh api repos/wesleysimplicio/simplicio-loop/releases/latest --jq .tag_name)"
+          release_json="$RUNNER_TEMP/loop-release.json"
+          gh api repos/wesleysimplicio/simplicio-loop/releases/latest > "$release_json"
+          tag="$(jq -r .tag_name "$release_json")"
           commit="$(git ls-remote https://github.com/wesleysimplicio/simplicio-loop.git "refs/tags/$tag" | awk 'NR==1 {print $1}')"
+          version="${tag#v}"
+          asset_name="simplicio_loop-${version}-py3-none-any.whl"
+          asset_url="$(jq -r --arg name "$asset_name" '.assets[] | select(.name == $name) | .browser_download_url' "$release_json" | head -1)"
+          asset_size="$(jq -r --arg name "$asset_name" '.assets[] | select(.name == $name) | .size' "$release_json" | head -1)"
           test -n "$tag"
           test "${#commit}" -eq 40
+          test -n "$asset_url"
+          test "$asset_size" -gt 0
+          curl --fail --silent --show-error --location "$asset_url" -o "$RUNNER_TEMP/$asset_name"
+          digest="$(sha256sum "$RUNNER_TEMP/$asset_name" | awk '{print $1}')"
+          test "${#digest}" -eq 64
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
           echo "commit=$commit" >> "$GITHUB_OUTPUT"
+          echo "artifact_url=$asset_url" >> "$GITHUB_OUTPUT"
+          echo "artifact_size=$asset_size" >> "$GITHUB_OUTPUT"
+          echo "artifact_digest=$digest" >> "$GITHUB_OUTPUT"
       - name: Generate deterministic consumer lock
-        run: python3 scripts/sync_loop_release.py "${{ steps.release.outputs.tag }}" "${{ steps.release.outputs.commit }}"
+        env:
+          TAG: ${{ steps.release.outputs.tag }}
+          COMMIT: ${{ steps.release.outputs.commit }}
+          ARTIFACT_URL: ${{ steps.release.outputs.artifact_url }}
+          ARTIFACT_SIZE: ${{ steps.release.outputs.artifact_size }}
+          ARTIFACT_DIGEST: ${{ steps.release.outputs.artifact_digest }}
+        run: python3 scripts/sync_loop_release.py "$TAG" "$COMMIT" "$ARTIFACT_URL" "$ARTIFACT_DIGEST" "$ARTIFACT_SIZE"
       - name: Open one bump PR when the lock changes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -55,4 +75,4 @@ jobs:
           git push --force-with-lease origin "$branch"
           gh pr create --base main --head "$branch" \
             --title "chore(release): sync Simplicio Loop $TAG" \
-            --body "Automated release-train bump. The lock records the Loop tag and full source commit resolved from GitHub. Validation must pass before merge."
+            --body "Automated release-train bump. The lock records the Loop tag, full source commit, and SHA-256 of the public wheel resolved from GitHub. Validation must pass before merge."
