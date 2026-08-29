@@ -31,7 +31,7 @@ Commands:
   report      report build <piece-id> [--require-evidence] (mechanical markdown)
   findings    findings list|report|reconcile|doctor (Loop receipt projections)
   campaign    Plan a piece queue from a CAMPAIGN.md brief, or review one
-  reference   Ingest a YouTube, HTTPS, file, or supplied-transcript reference
+  reference   Ingest or transcribe an authorized reference
   anchor      Freeze/check/gate a campaign anchor with durable AC receipts
   new-piece   Create a new piece markdown from the template
   status      Show pipeline state (counts + recent runs + 24h cost)
