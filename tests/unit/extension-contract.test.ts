@@ -4,6 +4,7 @@ import { chmodSync, cpSync, mkdtempSync, readFileSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { canonicalJson, loadExtensionFiles, manifestHash, negotiateVersion, probeCapabilities } from "../../lib/extension/contract.ts";
+import { composeStageGraph, CORE_STAGE_GRAPH, loadMarketingManifest } from "../../lib/extension/manifest.ts";
 
 test("version negotiation is bounded and actionable", () => {
   assert.deepEqual(negotiateVersion("3.38.1", "3.38.0", "3.38.99"), { ok: true, reason_code: null });
@@ -49,4 +50,12 @@ test("manifest hash is deterministic independent of object key order", () => {
   assert.equal(canonicalJson({ b: 2, a: 1 }), canonicalJson({ a: 1, b: 2 }));
   const manifest = JSON.parse(readFileSync(resolve("extensions/loop.marketing/manifest.json"), "utf8"));
   assert.match(manifestHash(manifest), /^[a-f0-9]{64}$/);
+});
+
+test("official marketing manifest composes with the core graph", () => {
+  const manifest = loadMarketingManifest();
+  const graph = composeStageGraph(CORE_STAGE_GRAPH, [manifest]);
+  assert.equal(graph.ok, true, graph.errors.join("; "));
+  assert.equal(manifest.role_bindings?.length, 14);
+  assert.equal(manifest.stage_overlays?.length, 7);
 });

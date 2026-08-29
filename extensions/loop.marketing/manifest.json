@@ -4,15 +4,54 @@
   "name": "Loop Marketing",
   "version": "1.0.0",
   "domain": "marketing",
-  "requires_core": { "min_version": "3.38.0", "max_version": "3.38.99" },
+  "requires_core": { "min_version": "3.38.1", "max_version": "3.99.99" },
   "capabilities": {
     "requires": ["extension_manifest.validate", "extension_receipts.read", "extension_reconcile"],
-    "provides": ["marketing.events.v1", "marketing.yool_projection.v1", "marketing.compliance.fail_closed"]
+    "provides": ["marketing.events.v1", "marketing.yool_projection.v1", "marketing.compliance.fail_closed", "marketing.roles.v1", "marketing.overlays.v1"]
   },
-  "source_adapters": [{ "adapter_id": "marketing_piece", "kind": "piece/v1" }],
+  "source_adapters": [
+    { "adapter_id": "marketing_brief", "kind": "brief/v1" },
+    { "adapter_id": "marketing_campaign", "kind": "campaign/v1" },
+    { "adapter_id": "marketing_piece", "kind": "piece/v1" },
+    { "adapter_id": "marketing_backlog", "kind": "backlog/v1" }
+  ],
   "context_schemas": [
     { "schema_id": "marketing-event", "version": "1.0.0", "migrations": [] },
-    { "schema_id": "marketing-loop-state", "version": "1.0.0", "migrations": [] }
+    { "schema_id": "marketing-loop-state", "version": "1.0.0", "migrations": [] },
+    { "schema_id": "marketing-reference-source", "version": "1.0.0", "migrations": [] },
+    { "schema_id": "marketing-transcript-segment", "version": "1.0.0", "migrations": [] }
+  ],
+  "stage_overlays": [
+    { "op": "insert_after", "hook": "intake", "stage": { "stage_id": "marketing.brief", "depends_on": ["intake"] }, "order": 10 },
+    { "op": "insert_after", "hook": "execute", "stage": { "stage_id": "marketing.strategy", "depends_on": ["execute"] }, "order": 20 },
+    { "op": "insert_after", "hook": "marketing.strategy", "stage": { "stage_id": "marketing.copy", "depends_on": ["marketing.strategy"] }, "order": 30 },
+    { "op": "insert_after", "hook": "marketing.copy", "stage": { "stage_id": "marketing.creative", "depends_on": ["marketing.copy"] }, "order": 40 },
+    { "op": "refine", "hook": "quality", "gates": { "marketing_compliance": "fail_closed", "safety": "fail_closed" }, "order": 50 },
+    { "op": "refine", "hook": "delivery", "gates": { "human_publish_approval": "block" }, "order": 60 },
+    { "op": "refine", "hook": "oracle", "gates": { "marketing_completion": "fail_closed" }, "order": 70 }
+  ],
+  "role_bindings": [
+    { "role_id": "marketing.campaign-intake", "specializes": "planner", "required_capabilities": ["marketing.brief"], "stage_id": "marketing.brief", "capabilities": ["intake"], "independent_from": [] },
+    { "role_id": "marketing.product-icp-research", "specializes": "researcher", "required_capabilities": ["marketing.research"], "stage_id": "marketing.strategy", "capabilities": ["icp"], "independent_from": ["marketing.completion-auditor"] },
+    { "role_id": "marketing.channel-content-planner", "specializes": "planner", "required_capabilities": ["marketing.channel-plan"], "stage_id": "marketing.strategy", "capabilities": ["channels"], "independent_from": ["marketing.completion-auditor"] },
+    { "role_id": "marketing.copy-script", "specializes": "implementer", "required_capabilities": ["marketing.copy"], "stage_id": "marketing.copy", "capabilities": ["copy"], "independent_from": ["marketing.compliance-safety"] },
+    { "role_id": "marketing.creative-image-video", "specializes": "implementer", "required_capabilities": ["marketing.creative"], "stage_id": "marketing.creative", "capabilities": ["image", "video"], "independent_from": ["marketing.compliance-safety"] },
+    { "role_id": "marketing.brand-humanization", "specializes": "reviewer", "required_capabilities": ["marketing.brand"], "stage_id": "quality", "capabilities": ["humanization"], "independent_from": ["marketing.copy-script", "marketing.creative-image-video"] },
+    { "role_id": "marketing.compliance-safety", "specializes": "reviewer", "required_capabilities": ["marketing.compliance"], "stage_id": "quality", "capabilities": ["safety"], "independent_from": ["marketing.copy-script", "marketing.creative-image-video"] },
+    { "role_id": "marketing.technical-qa-runtime", "specializes": "reviewer", "required_capabilities": ["marketing.qa"], "stage_id": "quality", "capabilities": ["runtime"], "independent_from": ["marketing.publish-schedule"] },
+    { "role_id": "marketing.publish-schedule", "specializes": "operator", "required_capabilities": ["marketing.publish"], "stage_id": "delivery", "capabilities": ["publish"], "independent_from": ["marketing.completion-auditor"] },
+    { "role_id": "marketing.metrics-experimentation", "specializes": "researcher", "required_capabilities": ["marketing.metrics"], "stage_id": "oracle", "capabilities": ["experimentation"], "independent_from": ["marketing.completion-auditor"] },
+    { "role_id": "marketing.promotion-ads", "specializes": "operator", "required_capabilities": ["marketing.ads"], "stage_id": "delivery", "capabilities": ["promotion"], "independent_from": ["marketing.compliance-safety"] },
+    { "role_id": "marketing.community-reply", "specializes": "operator", "required_capabilities": ["marketing.community"], "stage_id": "watcher", "capabilities": ["community"], "independent_from": ["marketing.compliance-safety"] },
+    { "role_id": "marketing.feedback-recovery", "specializes": "operator", "required_capabilities": ["marketing.recovery"], "stage_id": "watcher", "capabilities": ["feedback"], "independent_from": ["marketing.completion-auditor"] },
+    { "role_id": "marketing.completion-auditor", "specializes": "auditor", "required_capabilities": ["marketing.completion-audit"], "stage_id": "oracle", "capabilities": ["completion"], "independent_from": ["marketing.campaign-intake", "marketing.product-icp-research", "marketing.channel-content-planner", "marketing.copy-script", "marketing.creative-image-video", "marketing.brand-humanization", "marketing.compliance-safety", "marketing.technical-qa-runtime", "marketing.publish-schedule", "marketing.metrics-experimentation", "marketing.promotion-ads", "marketing.community-reply", "marketing.feedback-recovery"] }
+  ],
+  "resource_classes": [
+    { "class_id": "cpu", "concurrency_cap": 8, "budget": { "authority": "core", "scope": ["tenant", "campaign"] } },
+    { "class_id": "reasoning", "concurrency_cap": 2, "budget": { "authority": "core", "scope": ["provider", "tenant"] } },
+    { "class_id": "llm", "concurrency_cap": 4, "budget": { "authority": "core", "scope": ["provider", "tenant"] } },
+    { "class_id": "image_video", "concurrency_cap": 2, "budget": { "authority": "core", "scope": ["provider", "tenant"] } },
+    { "class_id": "social_api", "concurrency_cap": 1, "budget": { "authority": "core", "scope": ["provider", "tenant"] } }
   ],
   "gates": [
     { "gate_id": "marketing_compliance", "severity": "fail_closed" },
@@ -23,6 +62,10 @@
     { "effect_id": "marketing_ads", "idempotent": true, "requires_fence_token": true, "requires_receipt": true },
     { "effect_id": "marketing_comments", "idempotent": true, "requires_fence_token": true, "requires_receipt": true }
   ],
-  "receipt_schemas": [{ "schema_id": "simplicio.loop-receipt/v1", "version": "1.0.0" }],
+  "receipt_schemas": [
+    { "schema_id": "simplicio.loop-receipt/v1", "version": "1.0.0" },
+    { "schema_id": "marketing-stage-result/v1", "version": "1.0.0" },
+    { "schema_id": "marketing-reference-receipt/v1", "version": "1.0.0" }
+  ],
   "feature_flags": [{ "flag_id": "dry_run", "default": true }]
 }
